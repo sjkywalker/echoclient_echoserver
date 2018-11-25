@@ -49,6 +49,7 @@ def bind_socket(port):
 
 
 def client_thread(conn):
+	global connList
 	hello = "\n\nWelcome to my server\n\n"
 	conn.send(hello.encode('utf-8'))
 	while True:
@@ -57,7 +58,11 @@ def client_thread(conn):
 			break
 		sys.stdout.write(client_response)
 		sys.stdout.flush()
-		conn.send(client_response.encode('utf-8'))
+		if args.broadcast:
+			for conn_ in connList:
+				conn_.send(client_response.encode('utf-8'))
+		else:
+			conn.send(client_response.encode('utf-8'))
 
 	conn.close()
 	return
@@ -67,7 +72,8 @@ def main():
 	global s
 	global args
 	global host
-	
+	global connList
+
 	parse_arguments()
 	port = int(args.port)
 
@@ -77,13 +83,16 @@ def main():
 	create_socket(port)
 	bind_socket(port)
 
+	connList = []
 	sessionList = []
 
 	while True:
 		try:
 			conn, address = s.accept()
+			connList.append(conn)
 			print "[+] Connection established | " + "IP " + str(address[0]) + " Port " + str(address[1]) + "\n"
 			session = threading.Thread(target=client_thread, args=(conn,))
+			session.setDaemon(True)
 			sessionList.append(session)
 			session.start()
 
