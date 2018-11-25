@@ -25,14 +25,20 @@ def get_hello(s):
 	return
 
 
+def recv_echo(s):
+	while True:
+		server_echo = (s.recv(1024)).decode('utf-8')
+		sys.stdout.write(server_echo)
+		sys.stdout.flush()
+
+	return
+
+
 def send_msg(s):
 	while True:
 		msg = raw_input()
 		if len(msg) > 0:
 			s.send(msg.encode('utf-8'))
-			server_echo = (s.recv(1024)).decode('utf-8')
-			sys.stdout.write(server_echo)
-			sys.stdout.flush()
 
 	return
 
@@ -47,7 +53,14 @@ def main():
 	s.connect((host, port))
 
 	get_hello(s)
+
+	r = threading.Thread(target=recv_echo, args=(s,))
+	r.setDaemon(True)
+	r.start()
+
 	send_msg(s)
+
+	r.join()
 
 	return
 
