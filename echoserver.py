@@ -3,7 +3,8 @@
 import socket
 import sys
 import argparse
-import thread
+import threading
+
 
 def parse_arguments():
 	global args
@@ -25,7 +26,7 @@ def create_socket(port):
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 		print "[+] Created socket"
-	
+
 	except socket.error as msg:
 		print "[-] Socket creation error: " + str(msg)
 
@@ -38,52 +39,35 @@ def bind_socket(port):
 		print "[+] Binding socket to port: " + str(port)
 		
 		s.bind((host, port))
+
 		s.listen(5)
 
 	except socket.error as msg:
 		print "[-] Socket binding error: " + str(msg)
 
+	return
 
-def send_hello(conn):
+
+def client_thread(conn):
 	hello = "\n\nWelcome to my server\n\n"
 	conn.send(hello.encode('utf-8'))
-	return
-
-
-def echo_msg(conn):
 	while True:
 		client_response = (conn.recv(1024)).decode('utf-8')
+		if not client_response:
+			break
 		sys.stdout.write(client_response)
 		sys.stdout.flush()
-
 		conn.send(client_response.encode('utf-8'))
 
+	conn.close()
 	return
-
-
-def accept_connection(port):
-	try:
-		global host
-		global s
-
-		conn, address = s.accept()
-
-		print "[+] Connection established | " + "IP " + str(address[0]) + " Port " + str(address[1] + "\n")
-
-		send_hello(conn)
-		echo_msg(conn)
-
-		conn.close()
-
-	except socket.error as msg:
-		print "[-] Connection error: " + str(msg)
-
-	return
-
 
 
 def main():
+	global s
 	global args
+	global host
+	
 	parse_arguments()
 	port = int(args.port)
 
@@ -92,8 +76,25 @@ def main():
 
 	create_socket(port)
 	bind_socket(port)
-	accept_connection(port)
-	
+
+	sessionList = []
+
+	while True:
+		try:
+			conn, address = s.accept()
+			print "[+] Connection established | " + "IP " + str(address[0]) + " Port " + str(address[1]) + "\n"
+			session = threading.Thread(target=client_thread, args=(conn,))
+			sessionList.append(session)
+			session.start()
+
+		except socket.error as msg:
+			print "[-] Connection error: " + str(msg)	
+
+	for session in sessionList:
+		session.join()
+
+	s.close()
+
 	return
 
 

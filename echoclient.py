@@ -3,7 +3,7 @@
 import socket
 import sys
 import argparse
-import thread
+import threading
 
 
 def parse_arguments():
@@ -28,8 +28,8 @@ def get_hello(s):
 def send_msg(s):
 	while True:
 		msg = raw_input()
-		if len(str.encode(msg)) > 0:
-			s.send(str.encode(msg))
+		if len(msg) > 0:
+			s.send(msg.encode('utf-8'))
 			server_echo = (s.recv(1024)).decode('utf-8')
 			sys.stdout.write(server_echo)
 			sys.stdout.flush()
@@ -42,7 +42,7 @@ def main():
 	parse_arguments()
 	host = args.host
 	port = int(args.port)
-	
+
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.connect((host, port))
 
