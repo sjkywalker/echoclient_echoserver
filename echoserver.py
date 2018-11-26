@@ -48,16 +48,24 @@ def bind_socket(port):
 	return
 
 
-def client_thread(conn):
+def client_thread(conn, address):
 	global connList
-	hello = "\n\nWelcome to my server\n\n"
+
+	hello  = "\n" + "**************************\n"
+	hello +=        "*  Welcome to my server  *" + "\n"
+	hello +=        "**************************" + "\n"
+	hello += "\n" + "Your message will echo back" + "\n\n"
 	conn.send(hello.encode('utf-8'))
+
 	while True:
 		client_response = (conn.recv(1024)).decode('utf-8')
+
 		if not client_response:
 			break
-		sys.stdout.write(client_response)
+
+		sys.stdout.write("[+] From ({0}:{1}): ".format(str(address[0]), str(address[1])) + client_response + "\n")
 		sys.stdout.flush()
+
 		if args.broadcast:
 			for conn_ in connList:
 				conn_.send(client_response.encode('utf-8'))
@@ -65,6 +73,9 @@ def client_thread(conn):
 			conn.send(client_response.encode('utf-8'))
 
 	conn.close()
+
+	print "[*] Connection closed: ({0}:{1})".format(str(address[0]), str(address[1])) + "\n"
+
 	return
 
 
@@ -90,12 +101,11 @@ def main():
 		try:
 			conn, address = s.accept()
 			connList.append(conn)
-			print "[+] Connection established | " + "IP " + str(address[0]) + " Port " + str(address[1]) + "\n"
-			session = threading.Thread(target=client_thread, args=(conn,))
+			print "[+] Connection established: ({0}:{1})".format(str(address[0]), str(address[1])) + "\n"
+			session = threading.Thread(target=client_thread, args=(conn, address))
 			session.setDaemon(True)
 			sessionList.append(session)
 			session.start()
-
 		except socket.error as msg:
 			print "[-] Connection error: " + str(msg)	
 
