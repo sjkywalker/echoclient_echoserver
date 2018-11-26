@@ -36,7 +36,7 @@ def bind_socket(port):
 		global host
 		global s
 
-		print "[+] Binding socket to port: " + str(port)
+		print "[+] Binding socket to port: " + str(port) + "\n"
 		
 		s.bind((host, port))
 
