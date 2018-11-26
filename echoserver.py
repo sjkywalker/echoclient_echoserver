@@ -72,9 +72,11 @@ def client_thread(conn, address):
 		else:
 			conn.send(client_response.encode('utf-8'))
 
+	connList.remove(conn)
 	conn.close()
 
-	print "[*] Connection closed: ({0}:{1})".format(str(address[0]), str(address[1])) + "\n"
+	print "[*] Connection closed: ({0}:{1})".format(str(address[0]), str(address[1]))
+	print "[*] {0} Live session(s)".format(len(connList)) + "\n"
 
 	return
 
@@ -101,7 +103,8 @@ def main():
 		try:
 			conn, address = s.accept()
 			connList.append(conn)
-			print "[+] Connection established: ({0}:{1})".format(str(address[0]), str(address[1])) + "\n"
+			print "[+] Connection established: ({0}:{1})".format(str(address[0]), str(address[1]))
+			print "[*] {0} Live session(s)".format(len(connList)) + "\n"
 			session = threading.Thread(target=client_thread, args=(conn, address))
 			session.setDaemon(True)
 			sessionList.append(session)
