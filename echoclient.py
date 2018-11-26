@@ -28,7 +28,7 @@ def get_hello(s):
 def recv_echo(s):
 	while True:
 		server_echo = (s.recv(1024)).decode('utf-8')
-		sys.stdout.write(server_echo)
+		sys.stdout.write(server_echo + "\n")
 		sys.stdout.flush()
 
 	return
